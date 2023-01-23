@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1674488526732" clover="3.2.0">
+  <project timestamp="1674488526732" name="All files">
+    <metrics statements="37" coveredstatements="33" conditionals="36" coveredconditionals="27" methods="7" coveredmethods="7" elements="80" coveredelements="67" complexity="0" loc="37" ncloc="37" packages="1" files="1" classes="1"/>
+    <file name="index.tsx" path="/Users/birkir/Projects/dynamic-color/src/index.tsx">
+      <metrics statements="37" coveredstatements="33" conditionals="36" coveredconditionals="27" methods="7" coveredmethods="7"/>
+      <line num="41" count="5" type="stmt"/>
+      <line num="78" count="10" type="cond" truecount="1" falsecount="1"/>
+      <line num="79" count="10" type="stmt"/>
+      <line num="80" count="10" type="stmt"/>
+      <line num="81" count="10" type="stmt"/>
+      <line num="83" count="10" type="stmt"/>
+      <line num="94" count="10" type="cond" truecount="2" falsecount="0"/>
+      <line num="95" count="8" type="cond" truecount="2" falsecount="0"/>
+      <line num="96" count="5" type="cond" truecount="4" falsecount="0"/>
+      <line num="97" count="1" type="stmt"/>
+      <line num="99" count="4" type="stmt"/>
+      <line num="101" count="3" type="cond" truecount="1" falsecount="1"/>
+      <line num="102" count="3" type="cond" truecount="2" falsecount="2"/>
+      <line num="103" count="0" type="stmt"/>
+      <line num="105" count="3" type="stmt"/>
+      <line num="108" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="109" count="2" type="stmt"/>
+      <line num="113" count="0" type="stmt"/>
+      <line num="115" count="8" type="stmt"/>
+      <line num="131" count="2" type="stmt"/>
+      <line num="132" count="2" type="stmt"/>
+      <line num="136" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="137" count="0" type="stmt"/>
+      <line num="141" count="1" type="stmt"/>
+      <line num="146" count="1" type="stmt"/>
+      <line num="147" count="2" type="stmt"/>
+      <line num="148" count="2" type="stmt"/>
+      <line num="149" count="2" type="stmt"/>
+      <line num="150" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="151" count="2" type="stmt"/>
+      <line num="152" count="2" type="cond" truecount="3" falsecount="1"/>
+      <line num="153" count="2" type="stmt"/>
+      <line num="154" count="2" type="stmt"/>
+      <line num="155" count="2" type="stmt"/>
+      <line num="157" count="0" type="stmt"/>
+      <line num="162" count="2" type="stmt"/>
+      <line num="166" count="1" type="stmt"/>
+    </file>
+  </project>
+</coverage>
