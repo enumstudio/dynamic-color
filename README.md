@@ -1,160 +1,166 @@
-# TSDX React User Guide
+# Dynamic Color
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+Easily use dynamic colors in react native with @emotion/native
 
-> This TSDX setup is meant for developing React component libraries (not apps!) that can be published to NPM. If you’re looking to build a React-based app, you should use `create-react-app`, `razzle`, `nextjs`, `gatsby`, or `react-static`.
 
-> If you’re new to TypeScript and React, checkout [this handy cheatsheet](https://github.com/sw-yx/react-typescript-cheatsheet/)
+## Emotion theme requirements
 
-## Commands
+`dynamic-color` requires identical objects in your emotion theme that are selected based on selector keys (`mode` and `highContrast` for now).
 
-TSDX scaffolds your new library inside `/src`, and also sets up a [Parcel-based](https://parceljs.org) playground for it inside `/example`.
+```tsx
+interface Palette {
+  primary: string;
+  text: {
+    primary: string;
+  }
+}
 
-The recommended workflow is to run TSDX in one terminal:
-
-```bash
-npm start # or yarn start
-```
-
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
-
-Then run the example inside another:
-
-```bash
-cd example
-npm i # or yarn to install dependencies
-npm start # or yarn start
-```
-
-The default example imports and live reloads whatever is in `/dist`, so if you are seeing an out of date component, make sure TSDX is running in watch mode like we recommend above. **No symlinking required**, we use [Parcel's aliasing](https://parceljs.org/module_resolution.html#aliases).
-
-To do a one-off build, use `npm run build` or `yarn build`.
-
-To run tests, use `npm test` or `yarn test`.
-
-## Configuration
-
-Code quality is set up for you with `prettier`, `husky`, and `lint-staged`. Adjust the respective fields in `package.json` accordingly.
-
-### Jest
-
-Jest tests are set up to run with `npm test` or `yarn test`.
-
-### Bundle analysis
-
-Calculates the real cost of your library using [size-limit](https://github.com/ai/size-limit) with `npm run size` and visulize it with `npm run analyze`.
-
-#### Setup Files
-
-This is the folder structure we set up for you:
-
-```txt
-/example
-  index.html
-  index.tsx       # test your component here in a demo app
-  package.json
-  tsconfig.json
-/src
-  index.tsx       # EDIT THIS
-/test
-  blah.test.tsx   # EDIT THIS
-.gitignore
-package.json
-README.md         # EDIT THIS
-tsconfig.json
-```
-
-#### React Testing Library
-
-We do not set up `react-testing-library` for you yet, we welcome contributions and documentation on this.
-
-### Rollup
-
-TSDX uses [Rollup](https://rollupjs.org) as a bundler and generates multiple rollup configs for various module formats and build settings. See [Optimizations](#optimizations) for details.
-
-### TypeScript
-
-`tsconfig.json` is set up to interpret `dom` and `esnext` types, as well as `react` for `jsx`. Adjust according to your needs.
-
-## Continuous Integration
-
-### GitHub Actions
-
-Two actions are added by default:
-
-- `main` which installs deps w/ cache, lints, tests, and builds on all pushes against a Node and OS matrix
-- `size` which comments cost comparison of your library on every pull request using [`size-limit`](https://github.com/ai/size-limit)
-
-## Optimizations
-
-Please see the main `tsdx` [optimizations docs](https://github.com/palmerhq/tsdx#optimizations). In particular, know that you can take advantage of development-only optimizations:
-
-```js
-// ./types/index.d.ts
-declare var __DEV__: boolean;
-
-// inside your code...
-if (__DEV__) {
-  console.log('foo');
+const theme = {
+  mode: 'light' | 'dark',
+  dark: Palette,
+  light: Palette,
 }
 ```
 
-You can also choose to install and use [invariant](https://github.com/palmerhq/tsdx#invariant) and [warning](https://github.com/palmerhq/tsdx#warning) functions.
-
-## Module Formats
-
-CJS, ESModules, and UMD module formats are supported.
-
-The appropriate paths are configured in `package.json` and `dist/index.js` accordingly. Please report if any issues are found.
-
-## Deploying the Example Playground
-
-The Playground is just a simple [Parcel](https://parceljs.org) app, you can deploy it anywhere you would normally deploy that. Here are some guidelines for **manually** deploying with the Netlify CLI (`npm i -g netlify-cli`):
-
-```bash
-cd example # if not already in the example folder
-npm run build # builds to dist
-netlify deploy # deploy the dist folder
+Also supports high contrast mode:
+```tsx
+const theme = {
+   ...
+  highContrast: true | false,
+  highContrastLight: Palette,
+  highContrastDark: Palette,
+}
 ```
 
-Alternatively, if you already have a git repo connected, you can set up continuous deployment with Netlify:
+Here is an example configuration:
+```tsx
+import { ThemeProvider } from '@emotion/react';
+import { useColorScheme } from 'react-native';
 
-```bash
-netlify init
-# build command: yarn build && cd example && yarn && yarn build
-# directory to deploy: example/dist
-# pick yes for netlify.toml
+function App() {
+  const colorScheme = useColorScheme();
+  return (
+    <ThemeProvider
+      theme={{
+        mode: colorScheme,
+        light: {
+          primary: '#0000ff',
+          text: {
+            primary: '#000000',
+            secondary: '#121212',
+          },
+        },
+        dark: {
+          primary: '#00ffff',
+          text: {
+            primary: '#ffffff',
+            secondary: '#cccccc',
+          },
+        },
+        // (Optional)
+        highContrast: false,
+        highContrastLight: { ... },
+        highContrastDark: { ... }
+      }}
+    >
+      {children}
+    </ThemeProvider>
+  );
+}
 ```
 
-## Named Exports
+### DynamicColor Usage
 
-Per Palmer Group guidelines, [always use named exports.](https://github.com/palmerhq/typescript#exports) Code split inside your React app instead of your React library.
+```tsx
+import styled from '@emotion/native';
+import { DynamicColor } from 'dynamic-color';
 
-## Including Styles
+// Easy access to theme values with dot notation
+// Will resolve as #0000ff in light and #00ffff in dark.
+const Foo = styled.View`
+  background-color: ${DynamicColor('primary')};
+  background-color: ${DynamicColor(({ theme }) => theme.primary)};
+`
 
-There are many ways to ship styles, including with CSS-in-JS. TSDX has no opinion on this, configure how you like.
+// Without using theme
+const Bar = styled.View`
+  color: ${DynamicColor({ light: '#fff', dark: '#111' })};
+  color: ${DynamicColor({ light: '#ddd', highContrastLight: '#fff' })};
+`
 
-For vanilla CSS, you can include it at the root directory and add it to the `files` section in your `package.json`, so that it can be imported separately by your users and run through their bundler's loader.
+// Can also reference dot notations for each mode
+const Baz = styled.View`
+  color: ${DynamicColor({ light: 'text.primary', dark: 'text.secondary' })};
+`;
 
-## Publishing to NPM
+// Also supports props function
+const Bab = styled.View`
+  color: ${DynamicColor(props => props.active
+    ? { light: 'blue', dark: 'text.primary' }
+    : 'text.primary'
+  )};
+`;
 
-We recommend using [np](https://github.com/sindresorhus/np).
-
-## Usage with Lerna
-
-When creating a new package with TSDX within a project set up with Lerna, you might encounter a `Cannot resolve dependency` error when trying to run the `example` project. To fix that you will need to make changes to the `package.json` file _inside the `example` directory_.
-
-The problem is that due to the nature of how dependencies are installed in Lerna projects, the aliases in the example project's `package.json` might not point to the right place, as those dependencies might have been installed in the root of your Lerna project.
-
-Change the `alias` to point to where those packages are actually installed. This depends on the directory structure of your Lerna project, so the actual path might be different from the diff below.
-
-```diff
-   "alias": {
--    "react": "../node_modules/react",
--    "react-dom": "../node_modules/react-dom"
-+    "react": "../../../node_modules/react",
-+    "react-dom": "../../../node_modules/react-dom"
-   },
+// When already using props function inside a styled component,
+// remember to pass the theme down to the DynamicColor function.
+const Button = styled.View`
+  ${(props) => props.active && `
+    background-color: ${DynamicColor('primary')(props)};
+    color: ${DynamicColor('text.primary')(props)};
+  `}
+`;
 ```
 
-An alternative to fixing this problem would be to remove aliases altogether and define the dependencies referenced as aliases as dev dependencies instead. [However, that might cause other problems.](https://github.com/palmerhq/tsdx/issues/64)
+### useDynamicColor Usage
+
+Also provided is an react hook for use directly in style properties.
+
+```tsx
+import { useDynamicColor } from 'dynamic-color';
+
+function Button() {
+  const dynamicColor = useDynamicColor();
+  return <View style={{
+    color: dynamicColor('primary.main')
+  }}>
+}
+```
+
+### Advanced usage
+
+When outside of react scope, you can use the DynamicColor function but you need to pass in your theme.
+
+You also need to pass rawDynamicColor to get real `DynamicColorIOS`.
+
+```tsx
+import { Appearance } from 'react-native';
+import { DynamicColor } from 'dynamic-color';
+import { theme } from './theme';
+
+// Set your theme to correct mode
+theme.mode = Appearance.getColorScheme();
+
+// Generate your color with the props.
+const myColor = DynamicColor('text.primary')({ theme, rawDynamicColor: true });
+
+// Same as doing the following
+const myColor = Platform.select({
+  ios: DynamicColorIOS({ light: theme.light.text.primary, dark: theme.dark.text.primary }),
+  android: Appearance.getColorScheme() === 'light' ? theme.light.text.primary : theme.dark.text.primary
+});
+```
+
+You can create a utility function for this if you use it a lot:
+```tsx
+import { Appearance } from 'react-native';
+import { DynamicColor } from 'dynamic-color';
+import { theme } from './theme';
+
+export const rawDynamicColor = (cb: DynamicColorCallback) => DynamicColor(cb)({
+  theme: {
+    mode: Appearance.getColorScheme(),
+    ...theme,
+  },
+  rawDynamicColor: true,
+});
+```

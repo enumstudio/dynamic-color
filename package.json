@@ -1,5 +1,5 @@
 {
-  "version": "0.1.0",
+  "version": "0.1.4",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -7,6 +7,10 @@
     "dist",
     "src"
   ],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/birkir/dynamic-color.git"
+  },
   "engines": {
     "node": ">=10"
   },
@@ -14,9 +18,7 @@
     "start": "tsdx watch",
     "build": "tsdx build",
     "test": "jest --verbose",
-    "lint": "tsdx lint",
-    "size": "size-limit",
-    "analyze": "size-limit --why"
+    "lint": "tsdx lint"
   },
   "peerDependencies": {
     "@emotion/react": "*",

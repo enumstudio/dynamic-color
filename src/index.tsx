@@ -1,6 +1,6 @@
 import { Theme as EmotionTheme, useTheme } from "@emotion/react";
 import get from "lodash/get";
-import { StyleSheet, Platform, DynamicColorIOS } from "react-native";
+import { StyleSheet, Platform, DynamicColorIOS, ColorValue } from "react-native";
 import type { DynamicColorIOSTuple } from "react-native";
 
 // Utility types
@@ -27,13 +27,13 @@ type BaseTheme = {
 type Theme = EmotionTheme extends BaseTheme ? EmotionTheme : BaseTheme;
 
 type ColorString = string & {};
-type Color = ColorString | Leaves<Theme> | DynamicColorIOSTuple;
+type Color = ColorString | Leaves<Theme["light"]> | DynamicColorIOSTuple;
 
 type PatchedStyleSheet = typeof StyleSheet & {
   _flatten: typeof StyleSheet.flatten;
 };
 
-export type DynamicColorCallback = Color | ((props: { theme: Theme }) => Color);
+export type DynamicColorCallback = Color | ((props: { theme: Theme; rawDynamicColor?: boolean }) => Color);
 
 // Render DynamicColorIOS as string for further processing
 // in the StyleSheet.flatten function
@@ -44,11 +44,32 @@ export function DynamicColorIOSProperty(tuple: DynamicColorIOSTuple) {
 /**
  * Usage:
  * ```
- * DynamicColor({ light: '#fff', dark: '#000' })
- * DynamicColor({ light: 'text.primary', dark: '#112' })
+ *  // Easy access to theme values with dot notation
  * DynamicColor('primary.text')
+ * DynamicColor(({ theme }) => theme.primary.text)
+ * 
+ * // Statically typed
+ * DynamicColor({ light: '#fff', dark: '#111' })
+ * DynamicColor({ light: '#ddd', highContrastLight: '#fff' })
+ * 
+ * // Can also reference dot notations
+ * DynamicColor({ light: 'text.primary', dark: 'text.secondary' })
+ * 
+ * // Also supports props function
+ * DynamicColor(props => props.active
+ *    ? { light: 'blue', dark: 'text.primary' }
+ *    : 'text.primary'
+ * )
+ * 
+ * // Remember to pass props when using functional styles
+ * const Button = styled.View`
+ *   ${(props) => props.active && `
+ *     background-color: ${DynamicColor('primary.main')(props)};
+ *     color: ${DynamicColor('text.primary')(props)};
+ *   `}
+ * `;
  * ```
- *
+ * 
  * **Requirements**
  *
  * Emotion theme is required to have the following properties:
@@ -73,7 +94,7 @@ export function DynamicColorIOSProperty(tuple: DynamicColorIOSTuple) {
  * ```
  */
 export function DynamicColor(cb: DynamicColorCallback) {
-  function getDynamicColor(props: { theme: Theme }) {
+  function getDynamicColor(props: { theme: Theme; rawDynamicColor?: boolean }) {
     // Get value as raw or by function
     const value = typeof cb === "function" ? cb(props) : cb;
     const { theme } = props;
@@ -106,9 +127,12 @@ export function DynamicColor(cb: DynamicColorCallback) {
         }
       }
     } else if (Platform.OS === "ios") {
-      return DynamicColorIOSProperty(
-        typeof value === "string" ? tuple : (value as any)
-      );
+      const dynamicTuple = typeof value === "string" ? tuple : (value as any);
+      if (props.rawDynamicColor === true) {
+        return DynamicColorIOS(dynamicTuple)
+      } else {
+        return DynamicColorIOSProperty(dynamicTuple);
+      }
     }
     return "";
   }
@@ -127,9 +151,9 @@ export function DynamicColor(cb: DynamicColorCallback) {
 //   return false;
 // }
 
-export function useDynamicColor() {
+export function useDynamicColor(): (cb: DynamicColorCallback) => ColorValue {
   const theme = useTheme() as Theme;
-  return (cb: DynamicColorCallback) => DynamicColor(cb)({ theme });
+  return (cb: DynamicColorCallback) => DynamicColor(cb)({ theme, rawDynamicColor: true });
 }
 
 export function applyDynamicColorSupport() {
