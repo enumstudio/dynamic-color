@@ -1,7 +1,16 @@
 # Dynamic Color
 
-Easily use dynamic colors in react native with @emotion/native
+Easily use dynamic colors in react native with @emotion/native, multi-platform **iOS** and **Android**.
 
+Solves this problem:
+
+```tsx
+// Error: Implicit conversion of a 'symbol' to a 'string' will fail at runtime.
+background-color: ${DynamicColorIOS({ light: 'white', dark: 'black' })};
+
+// All OK!
+background-color: ${DynamicColor({ light: 'white', dark: 'black' })};
+```
 
 ## Emotion theme requirements
 
@@ -125,6 +134,18 @@ function Button() {
   }}>
 }
 ```
+
+### How does this work?
+
+```tsx
+background-color: ${DynamicColor({ light: 'white', dark: 'black' })};
+
+// Will be converted into
+background-color: DynamicColor, '{"light":"white","dark":"black"}';
+```
+
+Then `StyleSheet.flatten()` is patched to convert the css string `DynamicColor, '*'` back into `DynamicColorIOS`, because @styled/native will call this function in the final step of creating the stylesheet.
+
 
 ### Advanced usage
 
