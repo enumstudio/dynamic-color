@@ -1,5 +1,8 @@
 # Dynamic Color
 
+![4D176908-79ED-44A3-B45F-F5946A2E6458](https://user-images.githubusercontent.com/180773/214712307-a229f027-c1ca-4cc3-962f-b79a9542da25.jpeg)
+> ai generated artwork, "multicolor pen"
+
 Easily use dynamic colors in react native with @emotion/native or inline styles, multi-platform **iOS** and **Android**.
 
 Solves this problem:
