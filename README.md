@@ -1,6 +1,6 @@
 # Dynamic Color
 
-Easily use dynamic colors in react native with @emotion/native, multi-platform **iOS** and **Android**.
+Easily use dynamic colors in react native with @emotion/native or inline styles, multi-platform **iOS** and **Android**.
 
 Solves this problem:
 
@@ -11,6 +11,12 @@ background-color: ${DynamicColorIOS({ light: 'white', dark: 'black' })};
 // All OK!
 background-color: ${DynamicColor({ light: 'white', dark: 'black' })};
 ```
+
+
+Will output
+- `DynamicColorIOS({ light: "blue", dark: "red" })` on iOS, where the OS will render the correct color based on the app's color scheme.
+- `blue` on Android when theme is set to `light`
+- `red` on Android when theme is set to `dark`
 
 ## Emotion theme requirements
 
