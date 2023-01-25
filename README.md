@@ -135,53 +135,39 @@ function Button() {
 }
 ```
 
+### withDynamicColor Usage
+
+You can use dynamic color outside of react-land with the the `withDynamicColor` function.
+
+```tsx
+import { withDynamicColor } from 'dynamic-color';
+import { theme } from './theme';
+
+const dynamicColor = withDynamicColor({
+  mode: Appearance.getColorScheme(),
+  ...theme,
+});
+
+dynamicColor('primary.color');
+
+// Easily update the theme with the merge feature
+Appearance.addChangeListener(() =>
+  dynamicColor.merge({ mode: Appearance.getColorScheme() }));
+
+// Or set theme directly;
+dynamicColor.theme.mode = 'dark';
+```
+
 ### How does this work?
 
 ```tsx
 background-color: ${DynamicColor({ light: 'white', dark: 'black' })};
 
 // Will be converted into
-background-color: DynamicColor, '{"light":"white","dark":"black"}';
+background-color: color(DynamicColor, '{"light":"white","dark":"black"}');
 ```
 
 Then `StyleSheet.flatten()` is patched to convert the css string `DynamicColor, '*'` back into `DynamicColorIOS`, because @styled/native will call this function in the final step of creating the stylesheet.
 
+### Credits
 
-### Advanced usage
-
-When outside of react scope, you can use the DynamicColor function but you need to pass in your theme.
-
-You also need to pass rawDynamicColor to get real `DynamicColorIOS`.
-
-```tsx
-import { Appearance } from 'react-native';
-import { DynamicColor } from 'dynamic-color';
-import { theme } from './theme';
-
-// Set your theme to correct mode
-theme.mode = Appearance.getColorScheme();
-
-// Generate your color with the props.
-const myColor = DynamicColor('text.primary')({ theme, rawDynamicColor: true });
-
-// Same as doing the following
-const myColor = Platform.select({
-  ios: DynamicColorIOS({ light: theme.light.text.primary, dark: theme.dark.text.primary }),
-  android: Appearance.getColorScheme() === 'light' ? theme.light.text.primary : theme.dark.text.primary
-});
-```
-
-You can create a utility function for this if you use it a lot:
-```tsx
-import { Appearance } from 'react-native';
-import { DynamicColor } from 'dynamic-color';
-import { theme } from './theme';
-
-export const rawDynamicColor = (cb: DynamicColorCallback) => DynamicColor(cb)({
-  theme: {
-    mode: Appearance.getColorScheme(),
-    ...theme,
-  },
-  rawDynamicColor: true,
-});
-```

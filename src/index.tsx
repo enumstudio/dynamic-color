@@ -1,5 +1,6 @@
 import { Theme as EmotionTheme, useTheme } from "@emotion/react";
 import get from "lodash/get";
+import defaults from "lodash/defaults";
 import { StyleSheet, Platform, DynamicColorIOS, ColorValue } from "react-native";
 import type { DynamicColorIOSTuple } from "react-native";
 
@@ -38,7 +39,7 @@ export type DynamicColorCallback = Color | ((props: { theme: Theme; rawDynamicCo
 // Render DynamicColorIOS as string for further processing
 // in the StyleSheet.flatten function
 export function DynamicColorIOSProperty(tuple: DynamicColorIOSTuple) {
-  return `DynamicColor, '${JSON.stringify(tuple)}'`;
+  return `color(DynamicColor, '${JSON.stringify(tuple)}')`;
 }
 
 /**
@@ -139,22 +140,30 @@ export function DynamicColor(cb: DynamicColorCallback) {
   return getDynamicColor;
 }
 
-// Predicate to check if the value is a valid hex, hsl or rgb color.
-// function isColorValue(color: ColorValue) {
-//   if (typeof color === "string") {
-//     return /(#([\da-f]{3}){1,2}|(rgb|hsl)a\((\d{1,3}%?,\s?){3}(1|0?\.\d+)\)|(rgb|hsl)\(\d{1,3}%?(,\s?\d{1,3}%?){2}\))/i.test(
-//       color
-//     );
-//   } else if (typeof color === "object" && color !== null) {
-//     return true;
-//   }
-//   return false;
-// }
-
 export function useDynamicColor(): (cb: DynamicColorCallback) => ColorValue {
   const theme = useTheme() as Theme;
   return (cb: DynamicColorCallback) => DynamicColor(cb)({ theme, rawDynamicColor: true });
 }
+
+export function withDynamicColor(theme: Theme, rawDynamicColor = true) {
+  function getDynamicColor(cb: DynamicColorCallback) {
+    return DynamicColor(cb)({
+      theme: getDynamicColor.theme,
+      rawDynamicColor: getDynamicColor.rawDynamicColor,
+    });
+  }
+  getDynamicColor.theme = theme;
+  getDynamicColor.rawDynamicColor = rawDynamicColor;
+  getDynamicColor.merge = function(theme: Theme, rawDynamicColor = true) {
+    getDynamicColor.theme = defaults(theme, getDynamicColor.theme);
+    getDynamicColor.rawDynamicColor = rawDynamicColor;
+  }
+  return getDynamicColor;
+}
+
+const dynamicColor = withDynamicColor({ mode: "light", light: {}, dark: {} });
+dynamicColor({ light: "red", dark: "blue" });
+dynamicColor.merge({ mode: "dark", light: {}, dark: {} });
 
 export function applyDynamicColorSupport() {
   if ((StyleSheet as PatchedStyleSheet)._flatten) {
@@ -172,7 +181,7 @@ export function applyDynamicColorSupport() {
     for (const key in props) {
       const value = props[key];
       if (typeof value === "string") {
-        const matches = value.match(/DynamicColor\, \'(.*)\'/);
+        const matches = value.match(/color(DynamicColor\, \'(.*)\')/);
         if (matches && matches[1]) {
           try {
             const tuple = JSON.parse(matches[1]);
