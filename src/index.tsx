@@ -35,6 +35,7 @@ type PatchedStyleSheet = typeof StyleSheet & {
 };
 
 export type DynamicColorCallback = Color | ((props: { theme: Theme; rawDynamicColor?: boolean }) => Color);
+export type DynamicColorHookCallback = Color | ((props: Theme) => Color);
 
 // Render DynamicColorIOS as string for further processing
 // in the StyleSheet.flatten function
@@ -140,9 +141,14 @@ export function DynamicColor(cb: DynamicColorCallback) {
   return getDynamicColor;
 }
 
-export function useDynamicColor(): (cb: DynamicColorCallback) => ColorValue {
+export function useDynamicColor(): (cb: DynamicColorHookCallback) => ColorValue {
   const theme = useTheme() as Theme;
-  return (cb: DynamicColorCallback) => DynamicColor(cb)({ theme, rawDynamicColor: true });
+
+  return (cb: DynamicColorHookCallback) => {
+    const value = typeof cb === "function" ? cb(theme) : cb;
+    return DynamicColor(value)({ theme, rawDynamicColor: true });
+  };
+  //  DynamicColor(typeof cb === 'function' ? cb() : cb)({ theme, rawDynamicColor: true });
 }
 
 export function withDynamicColor(theme: Theme, rawDynamicColor = true) {
@@ -154,7 +160,7 @@ export function withDynamicColor(theme: Theme, rawDynamicColor = true) {
   }
   getDynamicColor.theme = theme;
   getDynamicColor.rawDynamicColor = rawDynamicColor;
-  getDynamicColor.merge = function(theme: Theme, rawDynamicColor = true) {
+  getDynamicColor.merge = function(theme: Partial<Theme>, rawDynamicColor = true) {
     getDynamicColor.theme = defaults(theme, getDynamicColor.theme);
     getDynamicColor.rawDynamicColor = rawDynamicColor;
   }
@@ -181,7 +187,7 @@ export function applyDynamicColorSupport() {
     for (const key in props) {
       const value = props[key];
       if (typeof value === "string") {
-        const matches = value.match(/color(DynamicColor\, \'(.*)\')/);
+        const matches = value.match(/color\(DynamicColor\, \'(.*)\'\)/);
         if (matches && matches[1]) {
           try {
             const tuple = JSON.parse(matches[1]);

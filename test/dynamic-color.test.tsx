@@ -1,18 +1,24 @@
-import { DynamicColorIOSProperty, DynamicColor, useDynamicColor } from '../src';
+import { DynamicColorIOSProperty, DynamicColor, useDynamicColor, withDynamicColor } from '../src';
 import { DynamicColorIOS, Platform, StyleSheet, Text } from 'react-native';
 import * as React from 'react';
 import { render, screen } from '@testing-library/react-native';
-import styled from '@emotion/native';
+import styled, { css } from '@emotion/native';
 import { ThemeProvider } from '@emotion/react';
 
 Platform.OS = 'android';
 
 const exampleTuple = { light: '#012', dark: '#fde' };
+const exampleTheme = {
+  mode: 'light' as const,
+  light: { primary: { main: '#012' } },
+  dark: { primary: { main: '#fde' } },
+};
+
 
 describe('DynamicColor', () => {
   test('DynamicColorIOSProperty', () => {
     expect(DynamicColorIOSProperty({ light: '#000', dark: '#fff' })).toBe(
-      `DynamicColor, '{"light":"#000","dark":"#fff"}'`
+      `color(DynamicColor, '{"light":"#000","dark":"#fff"}')`
     );
   });
 
@@ -25,7 +31,7 @@ describe('DynamicColor', () => {
   test('iOS', () => {
     Platform.OS = 'ios';
     const obj: any = DynamicColor(exampleTuple);
-    const str = `DynamicColor, '{"light":"#012","dark":"#fde"}'`;
+    const str = `color(DynamicColor, '{"light":"#012","dark":"#fde"}')`;
     expect(obj({ theme: { mode: 'light' } })).toBe(str);
     expect(obj({ theme: { mode: 'dark' } })).toBe(str);
     Platform.OS = 'android';
@@ -69,10 +75,27 @@ describe('DynamicColor', () => {
     expect(colorHighContrastFallback).toBe('blue');
   });
 
+  test('short-hands', () => {
+    Platform.OS = 'ios';
+    const color = DynamicColor('primary.main')({theme: exampleTheme, rawDynamicColor:false });
+    const colors = css`
+      color: ${color};
+      background: ${color};
+      border: 1px solid ${color};
+      text-decoration: underline solid ${color};
+      // overwrites
+      border-top-color: red;
+    `;
+    expect(colors.backgroundColor).toStrictEqual(DynamicColorIOS(exampleTuple));
+    expect(colors.borderColor).toStrictEqual(DynamicColorIOS(exampleTuple));
+    expect(colors.borderTopColor).toStrictEqual('red');
+    Platform.OS = 'android';
+  })
+
   test('useDynamicColor', async () => {
     const App = () => {
       const dynamicColor = useDynamicColor();
-      return <Text testID="app">{dynamicColor('primary.main')}</Text>;
+      return <Text testID="app">{dynamicColor('primary.main').toString()}</Text>;
     };
     const { rerender } = render(
       <ThemeProvider
@@ -105,6 +128,13 @@ describe('DynamicColor', () => {
     const res2 = await screen.findByTestId('app');
     expect(res2?._fiber?.stateNode?.props.children).toBe('blue');
   });
+
+  test('withDynamicColor', () => {
+    const dynamicColor = withDynamicColor(exampleTheme);
+    expect(dynamicColor('primary.main')).toBe('#012');
+    dynamicColor.merge({ mode: 'dark' });
+    expect(dynamicColor('primary.main')).toBe('#fde');
+  })
 
   test('StyleSheet polyfill', async () => {
     const styles = StyleSheet.flatten({
