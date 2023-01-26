@@ -38,6 +38,47 @@ yarn add @emotion/react @emotion/native
 
 The library does not have any native impact to your project (for now) so there is no need to rebuild binaries.
 
+### @emotion/react configuration
+
+The library requires identical objects in your emotion theme that are selected based on selector keys (`mode` and `highContrast` for now).
+
+```tsx
+import { ThemeProvider } from '@emotion/react';
+import { useColorScheme } from 'react-native';
+
+function App() {
+  const colorScheme = useColorScheme();
+  return (
+    <ThemeProvider
+      theme={{
+        mode: colorScheme,
+        light: {
+          primary: '#0000ff',
+          text: {
+            primary: '#000000',
+            secondary: '#121212',
+          },
+        },
+        dark: {
+          primary: '#00ffff',
+          text: {
+            primary: '#ffffff',
+            secondary: '#cccccc',
+          },
+        },
+        // (Optional)
+        highContrast: false,
+        highContrastLight: { ... },
+        highContrastDark: { ... }
+      }}
+    >
+      {children}
+    </ThemeProvider>
+  );
+}
+```
+
+
 ## How it works
 
 The `DynamicColor` function allows you to specify different color values for different theme modes (light, dark, and high contrast) in a single call. The function takes in an object with keys for each theme mode, and the corresponding value is the color to be used for that mode.
