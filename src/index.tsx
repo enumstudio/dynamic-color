@@ -31,7 +31,7 @@ type ColorString = string & {};
 type Color = ColorString | Leaves<Theme["light"]> | DynamicColorIOSTuple;
 
 type PatchedStyleSheet = typeof StyleSheet & {
-  _flatten: typeof StyleSheet.flatten;
+  _create: typeof StyleSheet.create;
 };
 
 export type DynamicColorCallback = Color | ((props: { theme: Theme; rawDynamicColor?: boolean }) => Color);
@@ -167,23 +167,15 @@ export function withDynamicColor(theme: Theme, rawDynamicColor = true) {
   return getDynamicColor;
 }
 
-const dynamicColor = withDynamicColor({ mode: "light", light: {}, dark: {} });
-dynamicColor({ light: "red", dark: "blue" });
-dynamicColor.merge({ mode: "dark", light: {}, dark: {} });
-
 export function applyDynamicColorSupport() {
-  if ((StyleSheet as PatchedStyleSheet)._flatten) {
+  if ((StyleSheet as PatchedStyleSheet)._create) {
     return;
   }
 
-  // Persist original StyleSheet.flatten function
-  (StyleSheet as PatchedStyleSheet)._flatten = StyleSheet.flatten;
+  // Persist original StyleSheet.create function
+  (StyleSheet as PatchedStyleSheet)._create = StyleSheet.create;
 
-  // We take advantage of the flatten function to parse DynamicColorIOS tuples
-  // passed to the style prop of a component, as @emotion/native uses this function
-  // in the final step of processing styles.
-  StyleSheet.flatten = (style) => {
-    const props = (StyleSheet as PatchedStyleSheet)._flatten(style);
+  function parseDynamicStyleValues(props: Record<string, string>) {
     for (const key in props) {
       const value = props[key];
       if (typeof value === "string") {
@@ -199,6 +191,16 @@ export function applyDynamicColorSupport() {
       }
     }
     return props;
+  }
+
+  // We take advantage of the create function to parse DynamicColorIOS tuples
+  // passed to the style prop of a component, as emotion and styled-components
+  // uses this function in the final step of processing styles.
+  StyleSheet.create = (style) => {
+    if ('generated' in style) {
+      style.generated = parseDynamicStyleValues(style.generated);
+    }
+    return (StyleSheet as PatchedStyleSheet)._create(style);
   };
 }
 
