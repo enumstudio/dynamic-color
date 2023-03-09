@@ -1,7 +1,7 @@
 import { Theme as EmotionTheme, useTheme } from "@emotion/react";
 import get from "lodash/get";
 import defaults from "lodash/defaults";
-import { StyleSheet, Platform, DynamicColorIOS, ColorValue } from "react-native";
+import { StyleSheet, Platform, DynamicColorIOS, ColorValue, ViewStyle, TextStyle, ImageStyle } from "react-native";
 import type { DynamicColorIOSTuple } from "react-native";
 
 // Utility types
@@ -34,7 +34,7 @@ type PatchedStyleSheet = typeof StyleSheet & {
   _create: typeof StyleSheet.create;
 };
 
-export type DynamicColorCallback = Color | ((props: { theme: Theme; rawDynamicColor?: boolean }) => Color);
+export type DynamicColorCallback = Color | ((props: { theme?: Theme; rawDynamicColor?: boolean }) => Color);
 export type DynamicColorHookCallback = Color | ((props: Theme) => Color);
 
 // Render DynamicColorIOS as string for further processing
@@ -175,15 +175,15 @@ export function applyDynamicColorSupport() {
   // Persist original StyleSheet.create function
   (StyleSheet as PatchedStyleSheet)._create = StyleSheet.create;
 
-  function parseDynamicStyleValues(props: Record<string, string>) {
+  function parseDynamicStyleValues(props: ViewStyle | TextStyle | ImageStyle) {
     for (const key in props) {
-      const value = props[key];
+      const value = (props as Record<string, unknown>)[key];
       if (typeof value === "string") {
         const matches = value.match(/color\(DynamicColor\, \'(.*)\'\)/);
         if (matches && matches[1]) {
           try {
             const tuple = JSON.parse(matches[1]);
-            (props as any)[key] = DynamicColorIOS(tuple);
+            (props as Record<string, unknown>)[key] = DynamicColorIOS(tuple);
           } catch (err) {
             console.warn("failed to parse DynamicColor", value, err);
           }
