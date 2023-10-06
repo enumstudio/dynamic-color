@@ -17,13 +17,14 @@ type Leaves<T, D extends number = 10> = [D] extends [never]
   ? { [K in keyof T]-?: Join<K, Leaves<T[K], Prev[D]>> }[keyof T]
   : "";
 
+type Palette = {};
 type BaseTheme = {
   mode: "light" | "dark";
   highContrast?: boolean;
-  highContrastLight?: any;
-  highContrastDark?: any;
-  light: any;
-  dark: any;
+  highContrastLight?: Palette;
+  highContrastDark?: Palette;
+  light: Palette;
+  dark: Palette;
 }
 type Theme = EmotionTheme extends BaseTheme ? EmotionTheme : BaseTheme;
 
@@ -96,7 +97,10 @@ export function DynamicColorIOSProperty(tuple: DynamicColorIOSTuple) {
  * ```
  */
 export function DynamicColor(cb: DynamicColorCallback) {
-  function getDynamicColor(props: { theme: Theme; rawDynamicColor?: boolean }) {
+  function getDynamicColor(props: { theme?: Theme; rawDynamicColor?: boolean }) {
+    if (!props.theme) {
+      throw new Error("DynamicColor requires a theme");
+    }
     // Get value as raw or by function
     const value = typeof cb === "function" ? cb(props) : cb;
     const { theme } = props;
@@ -148,11 +152,10 @@ export function useDynamicColor(): (cb: DynamicColorHookCallback) => ColorValue 
     const value = typeof cb === "function" ? cb(theme) : cb;
     return DynamicColor(value)({ theme, rawDynamicColor: true });
   };
-  //  DynamicColor(typeof cb === 'function' ? cb() : cb)({ theme, rawDynamicColor: true });
 }
 
 export function withDynamicColor(theme: Theme, rawDynamicColor = true) {
-  function getDynamicColor(cb: DynamicColorCallback) {
+  function getDynamicColor(cb: DynamicColorCallback): ColorValue {
     return DynamicColor(cb)({
       theme: getDynamicColor.theme,
       rawDynamicColor: getDynamicColor.rawDynamicColor,
