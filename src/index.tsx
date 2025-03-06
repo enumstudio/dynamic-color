@@ -118,7 +118,7 @@ export function DynamicColor(cb: DynamicColorCallback) {
         : value.highContrastDark,
     };
 
-    if (Platform.OS === "android") {
+    if (Platform.OS !== "ios") {
       if (theme.mode === "dark") {
         if (isHighContrast && tuple.highContrastDark) {
           return tuple.highContrastDark;
